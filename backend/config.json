@@ -1,0 +1,167 @@
+{
+    "scraping": {
+        "sources": [
+            {
+                "name": "CanaraBank",
+                "output_folder": "data/raw_pdfs/canara",
+                "playwright_code": "page.goto(\"https://www.canarabank.bank.in/\")\npage.get_by_role(\"button\", name=\"Select English language\").click()\npage.get_by_role(\"button\", name=\"Close\", exact=True).click()\npage.get_by_role(\"searchbox\", name=\"Search for content\").click()\npage.get_by_role(\"searchbox\", name=\"Search for content\").fill(\"Ten\")\npage.get_by_role(\"link\", name=\"Tenders\", exact=True).click()",
+                "pagination": {
+                    "enabled": true,
+                    "max_pages": 14,
+                    "extract_only_page": 14,
+                    "next_button_selector": "a[aria-label='Next']"
+                },
+                "file_selector": "a[href$='.pdf']"
+            }
+        ],
+        "browser_settings": {
+            "headless": false,
+            "timeout": 60000
+        },
+        "download_settings": {
+            "chunk_size": 8192,
+            "retry_attempts": 10
+        }
+    },
+    "processing": {
+        "input_folders": [
+            "data/raw_pdfs/canara"
+        ],
+        "output_folders": {
+            "filtered": "data/filtered_pdfs",
+            "filtered_by_tender": "data/filtered_pdfs",
+            "extracted": "data/extracted_sections",
+            "docx": "data/output_docx",
+            "metadata": "data/metadata"
+        },
+        "filter_settings": {
+            "max_pages_to_scan": 12,
+            "semantic_threshold": 0.60,
+            "cache_file": "data/gemini_cache.json",
+            "priority_keywords": {
+                "HIGH": [
+                    "tender",
+                    "rfp",
+                    "request for proposal",
+                    "procurement",
+                    "bid",
+                    "bidding",
+                    "quotation",
+                    "quote",
+                    "Soundbox",
+                    "Qr",
+                    "EWS",
+                    "Early Warning System",
+                    "Fintech",
+                    "ODR",
+                    "Online Dispute Resolution",
+                    "UPI",
+                    "SWITCH",
+                    "FRM",
+                    "Fraud Risk Monitoring",
+                    "Merchant Acquiring",
+                    "Merchant portal",
+                    "CBDC",
+                    "BBPS",
+                    "BHARAT CONNECT",
+                    "IMPS",
+                    "Credit line on UPI",
+                    "CLOU",
+                    "HSM",
+                    "EMQX",
+                    "LOAN MANAGEMENT SYSTEM",
+                    "Auditor for Vendor Risk Assessments",
+                    "IBMB",
+                    "TPAP",
+                    "Omnichannel Banking",
+                    "Cryptographic Key Management Solution",
+                    "Key Management System",
+                    "Key Management Solution",
+                    "KMS",
+                    "Hardware Security Module",
+                    "Load Balancer",
+                    "Agentic AI",
+                    "Cybersecurity",
+                    "Cyber Security",
+                    "Information Security",
+                    "IT Security",
+                    "Security Audit",
+                    "Risk Assessment",
+                    "Vendor Risk",
+                    "Due Diligence",
+                    "Cert-In",
+                    "VAPT",
+                    "Vulnerability Assessment",
+                    "Penetration Testing",
+                    "Security Operations",
+                    "SOC",
+                    "SIEM",
+                    "Compliance Audit",
+                    "IT Audit",
+                    "Third Party Risk",
+                    "Vendor Assessment"
+                ],
+                "MEDIUM": [
+                    "vendor",
+                    "supplier",
+                    "vendor registration",
+                    "supplier portal",
+                    "contract",
+                    "agreement",
+                    "purchase",
+                    "acquisition",
+                    "sourcing",
+                    "selection",
+                    "prequalification",
+                    "expression of interest"
+                ],
+                "LOW": [
+                    "technology procurement",
+                    "IT services",
+                    "software development",
+                    "infrastructure",
+                    "consulting services",
+                    "professional services"
+                ]
+            },
+            "scoring": {
+                "HIGH": 3.0,
+                "MEDIUM": 1.5,
+                "LOW": 1.5,
+                "pass_threshold": 0.1
+            }
+        },
+        "form_detection_settings": {
+            "enabled": true,
+            "form_indicators": [
+                "annexure",
+                "technical bid",
+                "financial bid",
+                "price bid",
+                "commercial bid",
+                "format",
+                "proforma",
+                "declaration",
+                "undertaking",
+                "certificate",
+                "details of offer",
+                "financial details",
+                "draft",
+                "sample format",
+                "bid form"
+            ],
+            "signature_indicators": [
+                "signature",
+                "seal",
+                "stamp",
+                "authorized signatory",
+                "date",
+                "place",
+                "name of bidder",
+                "name of firm",
+                "name & signature",
+                "signing authority"
+            ]
+        }
+    }
+}

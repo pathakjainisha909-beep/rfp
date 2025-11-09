@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: ./backend
+    container_name: rfp_backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/venv  # Exclude venv from mount
+      - /app/__pycache__  # Exclude cache
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+  frontend:
+    build: ./fontend
+    container_name: rfp_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./fontend:/app
+      - /app/node_modules  
