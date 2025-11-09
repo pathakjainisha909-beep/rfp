@@ -554,46 +554,57 @@ Return ONLY a JSON object:
             return None
     
     def _detect_forms(self, pdf_path, sample_file):
-        detection_prompt = """You are analyzing a tender/procurement PDF document. Your task is to find ALL sections that bidders need to fill, respond to, or submit.
+        detection_prompt = """You are analyzing a tender/procurement PDF document.
 
-TYPES OF FORMS TO DETECT:
+    TASK: Find ALL FORMS and ANNEXURES that bidders must fill and submit.
 
-1. TRADITIONAL FORMS:
-   - Has titles like "ANNEXURE-I", "ANNEXURE-II", "TECHNICAL BID", "FINANCIAL BID"
-   - Contains blank fields, tables, checkboxes to fill
-   - Ends with signature/seal/date blocks
+    ✅ ALWAYS EXTRACT (These are definitely forms):
 
-2. GeM/GOVERNMENT TENDER DOCUMENTS:
-   - "Additional Qualification/Data Required" sections
-   - "Technical Specifications" sections that need bidder response
-   - "Buyer Added Bid Specific Terms" requiring acceptance/compliance
-   - "Document required from seller" sections
-   - Any section requiring bidder to submit documents or information
+    1. ANY document with these titles:
+    - "ANNEXURE-I", "ANNEXURE-II", "ANNEXURE-1", "ANNEXURE-2" (any variation)
+    - "FORM-1", "FORM-2", "TECHNICAL BID FORM", "FINANCIAL BID"
+    - "Format for...", "Proforma of...", "Template for..."
+    - "Appendix-A", "Appendix-B", "Schedule-1", "Schedule-2"
 
-3. COMPLIANCE SECTIONS:
-   - Eligibility criteria requiring documentation
-   - Experience criteria sections
-   - Financial standing requirements
-   - Technical qualification parameters
-   - Pre-bid requirements
+    2. ANY section ending with signature blocks like:
+    - "Signature of Bidder"
+    - "Name and Signature"
+    - "Seal of the Company"
+    - "Date:", "Place:"
+    - "Authorized Signatory"
+    - "Name of the Firm/Company"
+    
+    → If you see these at the end of ANY section, extract the ENTIRE section as a form!
 
-4. SUBMISSION REQUIREMENTS:
-   - EMD (Earnest Money Deposit) details
-   - ePBG (e-Performance Bank Guarantee) details
-   - Certificate requirements
-   - Undertaking requirements
+    3. Documents with:
+    - Blank fields, empty tables for filling
+    - "To be filled by bidder"
+    - Price bid formats, financial templates
+    - Undertaking/Declaration/Certificate formats
 
-FOR EACH FORM/SECTION FOUND:
-1. Identify the exact title or heading
-2. Determine start and end page numbers
-3. Assess confidence level (high/medium/low)
+    ❌ DO NOT EXTRACT (Only this specific case):
 
-IMPORTANT:
-- If document is a GeM tender, extract key sections as separate "forms"
-- Even if there are no traditional blank forms, extract sections requiring bidder action
-- Look for any section with headings indicating bidder requirements
+    - The main GeM bid details page (usually 5-10 pages) that shows:
+    * "Bid Details" table
+    * "EMD Detail" section
+    * "ePBG Detail" section  
+    * "Buyer Added Bid Specific Terms"
+    * No annexure title, no signature block
+    
+    → This is just the tender overview, NOT a form to fill!
 
-Return JSON with ALL forms/sections found using the AllFormsDetection schema."""
+    RULES:
+    - If it has "ANNEXURE" in the title → EXTRACT IT (even if no signature)
+    - If it has signature/seal/date block at end → EXTRACT IT (even if no "Annexure" title)
+    - If you're unsure, but it has either annexure title OR signature block → EXTRACT IT
+    - Only skip the main GeM bid details page (which has neither annexure title nor signature)
+
+    FOR EACH FORM:
+    1. Extract the full title (e.g., "Annexure-1 Bid Covering Letter")
+    2. Mark start and end page numbers (1-indexed)
+    3. Set confidence level
+
+    Return JSON using AllFormsDetection schema."""
         
         try:
             model = genai.GenerativeModel(
@@ -615,6 +626,7 @@ Return JSON with ALL forms/sections found using the AllFormsDetection schema."""
         except Exception as e:
             print(f"[ERROR] Gemini form detection error: {e}")
             return 0, []
+    
     
     def _extract_deadline(self, pdf_path, sample_file):
         deadline_prompt = """You are analyzing a tender/procurement document. Find the tender submission deadline.
